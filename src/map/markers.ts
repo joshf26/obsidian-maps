@@ -1,7 +1,7 @@
 import { App, BasesEntry, BasesPropertyId, Keymap, Menu, setIcon } from 'obsidian';
 import { Map, LngLatBounds, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
 import { MapMarker, MapMarkerProperties } from './types';
-import { coordinateFromValue } from './utils';
+import { coordinatesFromValue } from './utils';
 import { PopupManager } from './popup';
 
 export class MarkerManager {
@@ -62,20 +62,21 @@ export class MarkerManager {
 		for (const entry of data.data) {
 			if (!entry) continue;
 
-			let coordinates: [number, number] | null = null;
 			try {
 				const value = entry.getValue(mapConfig.coordinatesProp);
-				coordinates = coordinateFromValue(value);
+				const coordinatesList = coordinatesFromValue(value);
+
+				for (const coordinates of coordinatesList) {
+					if (coordinates) {
+						validMarkers.push({
+							entry,
+							coordinates,
+						});
+					}
+				}
 			}
 			catch (error) {
 				console.error(`Error extracting coordinates for ${entry.file.name}:`, error);
-			}
-
-			if (coordinates) {
-				validMarkers.push({
-					entry,
-					coordinates,
-				});
 			}
 		}
 
@@ -468,4 +469,3 @@ export class MarkerManager {
 		});
 	}
 }
-

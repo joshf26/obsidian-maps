@@ -1,9 +1,9 @@
 import { Value, NumberValue, StringValue, ListValue } from 'obsidian';
 
 /**
- * Converts a Value to coordinate tuple [lat, lng]
+ * Converts a Value to a single coordinate tuple [lat, lng].
  */
-export function coordinateFromValue(value: Value | null): [number, number] | null {
+export function singleCoordinateFromValue(value: Value | null): [number, number] | null {
 	let lat: number | null = null;
 	let lng: number | null = null;
 
@@ -29,6 +29,34 @@ export function coordinateFromValue(value: Value | null): [number, number] | nul
 	}
 
 	return null;
+}
+
+/**
+ * Converts a Value to a list of coordinate tuples [lat, lng].
+ * The expected format is a list of lists, e.g., [["lat1", "lng1"], ["lat2", "lng2"]].
+ */
+export function coordinatesFromValue(value: Value | null): [number, number][] {
+	const coordinatesList: [number, number][] = [];
+
+	if (!(value instanceof ListValue)) {
+		return coordinatesList;
+	}
+
+	for (let i = 0; i < value.length(); i++) {
+		const item = value.get(i);
+		if (!(item instanceof ListValue) || item.length() < 2) {
+			continue;
+		}
+
+		const lat = parseCoordinate(item.get(0));
+		const lng = parseCoordinate(item.get(1));
+
+		if (lat !== null && lng !== null && verifyLatLng(lat, lng)) {
+			coordinatesList.push([lat, lng]);
+		}
+	}
+
+	return coordinatesList;
 }
 
 /**
@@ -66,4 +94,3 @@ export function parseCoordinate(value: unknown): number | null {
 export function hasOwnProperty<K extends PropertyKey>(o: unknown, v: K): o is Record<K, unknown> {
 	return o != null && typeof o === 'object' && Object.hasOwn(o, v);
 }
-

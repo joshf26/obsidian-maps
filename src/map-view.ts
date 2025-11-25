@@ -17,7 +17,7 @@ import { BackgroundSwitcherControl } from './map/controls/background-switcher';
 import { StyleManager } from './map/style';
 import { PopupManager } from './map/popup';
 import { MarkerManager } from './map/markers';
-import { hasOwnProperty, coordinateFromValue } from './map/utils';
+import { hasOwnProperty, singleCoordinateFromValue } from './map/utils';
 import { rtlPluginCode } from './map/rtl-plugin-code';
 
 interface MapConfig {
@@ -558,7 +558,7 @@ export class MapView extends BasesView {
 				return DEFAULT_MAP_CENTER;
 			}
 		}
-		return coordinateFromValue(centerConfig) || DEFAULT_MAP_CENTER;
+		return singleCoordinateFromValue(centerConfig) || DEFAULT_MAP_CENTER;
 	}
 
 	private getConfigSnapshot(): string {
@@ -598,7 +598,7 @@ export class MapView extends BasesView {
 						const propertyKey = this.mapConfig.coordinatesProp.startsWith('note.')
 							? this.mapConfig.coordinatesProp.slice(5)
 							: this.mapConfig.coordinatesProp;
-						frontmatter[propertyKey] = [currentLat.toString(), currentLng.toString()];
+						frontmatter[propertyKey] = [[currentLat.toString(), currentLng.toString()]];
 					}
 				});
 			})
