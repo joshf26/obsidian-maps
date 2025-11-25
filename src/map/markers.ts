@@ -118,53 +118,59 @@ export class MarkerManager {
 
 	private getCustomIcon(entry: BasesEntry): string | null {
 		const mapConfig = this.getMapConfig();
-		if (!mapConfig || !mapConfig.markerIconProp) return null;
+		if (!mapConfig) return null;
 
-		try {
-			const value = entry.getValue(mapConfig.markerIconProp);
-			if (!value || !value.isTruthy()) return null;
+		if (mapConfig.markerIconProp) {
+			try {
+				const value = entry.getValue(mapConfig.markerIconProp);
+				if (value && value.isTruthy()) {
+					// Extract the icon name from the value
+					const iconString = value.toString().trim();
 
-			// Extract the icon name from the value
-			const iconString = value.toString().trim();
-
-			// Handle null/empty/invalid cases - return null to show default marker
-			if (!iconString || iconString.length === 0 || iconString === 'null' || iconString === 'undefined') {
-				return null;
+					// Ensure not null/empty/invalid
+					if (iconString && iconString !== 'null' && iconString !== 'undefined') {
+						return iconString;
+					}
+				}
+			} catch (error) {
+				// Log as warning instead of error - this is not critical
+				console.warn(`Could not extract icon for ${entry.file.name}.`, error);
 			}
+		}
 
-			return iconString;
-		}
-		catch (error) {
-			// Log as warning instead of error - this is not critical
-			console.warn(`Could not extract icon for ${entry.file.name}. The marker icon property should be a simple text value (e.g., "map", "star").`, error);
-			return null;
-		}
+		return mapConfig.defaultMarkerIcon || null;
 	}
 
 	private getCustomColor(entry: BasesEntry): string | null {
 		const mapConfig = this.getMapConfig();
-		if (!mapConfig || !mapConfig.markerColorProp) return null;
+		if (!mapConfig) return null;
 
-		try {
-			const value = entry.getValue(mapConfig.markerColorProp);
-			if (!value || !value.isTruthy()) return null;
-
-			// Extract the color value from the property
-			const colorString = value.toString().trim();
-
-			// Return the color as-is, let CSS handle validation
-			// Supports: hex (#ff0000), rgb/rgba, hsl/hsla, CSS color names, and CSS custom properties (var(--color-name))
-			return colorString;
+		if (mapConfig.markerColorProp) {
+			try {
+				const value = entry.getValue(mapConfig.markerColorProp);
+				if (value && value.isTruthy()) {
+					// Extract the color value from the property
+					const colorString = value.toString().trim();
+					if (colorString) {
+						// Return the color as-is, let CSS handle validation
+						// Supports: hex (#ff0000), rgb/rgba, hsl/hsla, CSS color names, and CSS custom properties (var(--color-name))
+						return colorString;
+					}
+				}
+			} catch (error) {
+				// Log as warning instead of error - this is not critical
+				console.warn(`Could not extract color for ${entry.file.name}.`, error);
+			}
 		}
-		catch (error) {
-			// Log as warning instead of error - this is not critical
-			console.warn(`Could not extract color for ${entry.file.name}. The marker color property should be a simple text value (e.g., "#ff0000", "red", "var(--color-accent)").`);
-			return null;
-		}
+
+		return mapConfig.defaultMarkerColor || null;
 	}
 
 	private async loadCustomIcons(markers: MapMarker[]): Promise<void> {
 		if (!this.map) return;
+
+		const mapConfig = this.getMapConfig();
+		const defaultColor = mapConfig.defaultMarkerColor || 'var(--bases-map-marker-background)';
 
 		// Collect all unique icon+color combinations that need to be loaded
 		const compositeImagesToLoad: Array<{ icon: string | null; color: string }> = [];
@@ -172,7 +178,7 @@ export class MarkerManager {
 		
 		for (const markerData of markers) {
 			const icon = this.getCustomIcon(markerData.entry);
-			const color = this.getCustomColor(markerData.entry) || 'var(--bases-map-marker-background)';
+			const color = this.getCustomColor(markerData.entry) || defaultColor;
 			const compositeKey = this.getCompositeImageKey(icon, color);
 			
 			if (!this.loadedIcons.has(compositeKey)) {
@@ -317,10 +323,13 @@ export class MarkerManager {
 	}
 
 	private createGeoJSONFeatures(markers: MapMarker[]): GeoJSON.Feature[] {
+		const mapConfig = this.getMapConfig();
+		const defaultColor = mapConfig.defaultMarkerColor || 'var(--bases-map-marker-background)';
+
 		return markers.map((markerData, index) => {
 			const [lat, lng] = markerData.coordinates;
 			const icon = this.getCustomIcon(markerData.entry);
-			const color = this.getCustomColor(markerData.entry) || 'var(--bases-map-marker-background)';
+			const color = this.getCustomColor(markerData.entry) || defaultColor;
 			const compositeKey = this.getCompositeImageKey(icon, color);
 
 			const properties: MapMarkerProperties = {

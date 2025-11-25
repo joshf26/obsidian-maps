@@ -24,6 +24,8 @@ interface MapConfig {
 	coordinatesProp: BasesPropertyId | null;
 	markerIconProp: BasesPropertyId | null;
 	markerColorProp: BasesPropertyId | null;
+	defaultMarkerIcon: string | null;
+	defaultMarkerColor: string | null;
 	mapHeight: number;
 	defaultZoom: number;
 	center: [number, number];
@@ -442,6 +444,8 @@ export class MapView extends BasesView {
 		const coordinatesProp = this.config.getAsPropertyId('coordinates');
 		const markerIconProp = this.config.getAsPropertyId('markerIcon');
 		const markerColorProp = this.config.getAsPropertyId('markerColor');
+		const defaultMarkerIcon = this.config.get('defaultMarkerIcon') as string | null;
+		const defaultMarkerColor = this.config.get('defaultMarkerColor') as string | null;
 
 		// Load numeric configurations with validation
 		const minZoom = this.getNumericConfig('minZoom', 0, 0, 24);
@@ -493,6 +497,8 @@ export class MapView extends BasesView {
 			coordinatesProp,
 			markerIconProp,
 			markerColorProp,
+			defaultMarkerIcon,
+			defaultMarkerColor,
 			mapHeight,
 			defaultZoom,
 			center,
@@ -752,6 +758,18 @@ export class MapView extends BasesView {
 						key: 'markerColor',
 						filter: prop => !prop.startsWith('file.'),
 						placeholder: 'Property',
+					},
+					{
+						displayName: 'Default icon',
+						type: 'text',
+						key: 'defaultMarkerIcon',
+						placeholder: 'Lucide icon',
+					},
+					{
+						displayName: 'Default color',
+						type: 'text',
+						key: 'defaultMarkerColor',
+						placeholder: 'CSS color',
 					},
 				]
 			},
